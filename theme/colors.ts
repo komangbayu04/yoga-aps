@@ -1,0 +1,15 @@
+export const colors = {
+  primary: '#5C8A5C',
+  primaryActive: '#7AAD7A',
+  primaryNeutral: '#A8C9A8',
+  primaryPale: '#D6EAD6',
+  canvas: '#FFFFFF',
+  canvasSoft: '#E8EBE6',
+  ink: '#0E0F0C',
+  body: '#454745',
+  mute: '#868685',
+  positive: '#2EAD4B',
+  positiveDeep: '#054D28',
+  negative: '#D03238',
+  negativeBg: '#320707',
+} as const;

@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "OfficeFlex Yoga",
+    "slug": "officeflex-yoga",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "officeflex",
+    "userInterfaceStyle": "light",
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "backgroundColor": "#5C8A5C"
+      },
+      "package": "com.officeflex.yoga"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-av",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#5C8A5C"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
