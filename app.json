@@ -23,7 +23,8 @@
           "icon": "./assets/icon.png",
           "color": "#5C8A5C"
         }
-      ]
+      ],
+      "./plugins/withGradle813"
     ],
     "experiments": {
       "typedRoutes": true
