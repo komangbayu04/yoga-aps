@@ -23,7 +23,8 @@
           "color": "#5C8A5C"
         }
       ],
-      "./plugins/withGradle813"
+      "./plugins/withGradle813",
+      "./plugins/withLocalProperties"
     ],
     "experiments": {
       "typedRoutes": true
