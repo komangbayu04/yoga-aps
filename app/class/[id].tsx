@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Dimensions } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { colors } from '../../theme/colors';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -18,31 +18,26 @@ export default function ClassPlayer() {
   const addSession = useProgressStore((s) => s.addSession);
   const incrementStreak = useProgressStore((s) => s.incrementStreak);
 
-  const videoRef = useRef<Video>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
+  const videoRef = useRef<VideoView>(null);
+
+  const player = useVideoPlayer(cls?.video_url ?? null, (p) => {
+    p.loop = false;
+  });
 
   if (!cls) return null;
 
-  const related = (allClasses ?? []).filter((c) => c.id !== cls.id && c.complaints.some((cp) => cls.complaints.includes(cp))).slice(0, 3);
+  const isPlaying = player.playing;
+  const related = (allClasses ?? [])
+    .filter((c) => c.id !== cls.id && c.complaints.some((cp) => cls.complaints.includes(cp)))
+    .slice(0, 3);
 
-  const handlePlaybackStatus = (status: AVPlaybackStatus) => {
-    if (!status.isLoaded) return;
-    setIsPlaying(status.isPlaying);
-    setPosition(status.positionMillis ?? 0);
-    setDuration(status.durationMillis ?? 0);
-    if (status.didJustFinish) setIsFinished(true);
-  };
-
-  const togglePlay = async () => {
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      await videoRef.current.pauseAsync();
+  const togglePlay = () => {
+    if (player.playing) {
+      player.pause();
     } else {
-      await videoRef.current.playAsync();
+      player.play();
     }
   };
 
@@ -52,34 +47,23 @@ export default function ClassPlayer() {
     router.back();
   };
 
-  const formatTime = (ms: number) => {
-    const s = Math.floor(ms / 1000);
-    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
       {/* Video */}
       <TouchableOpacity onPress={() => setShowControls((v) => !v)} activeOpacity={1}>
         <View style={styles.videoContainer}>
-          <Video
+          <VideoView
             ref={videoRef}
-            source={{ uri: cls.video_url }}
+            player={player}
             style={styles.video}
-            resizeMode={ResizeMode.CONTAIN}
-            onPlaybackStatusUpdate={handlePlaybackStatus}
+            contentFit="contain"
+            nativeControls={false}
           />
           {showControls && (
             <View style={styles.controls}>
               <TouchableOpacity onPress={togglePlay} style={styles.playBtn}>
                 <Text style={styles.playIcon}>{isPlaying ? '⏸' : '▶'}</Text>
               </TouchableOpacity>
-              <View style={styles.seekBar}>
-                <View style={styles.seekTrack}>
-                  <View style={[styles.seekFill, { width: duration > 0 ? `${(position / duration) * 100}%` : '0%' }]} />
-                </View>
-                <Text style={styles.timeText}>{formatTime(position)} / {formatTime(duration)}</Text>
-              </View>
             </View>
           )}
         </View>
@@ -107,7 +91,6 @@ export default function ClassPlayer() {
         </View>
         <Text style={styles.description}>{cls.description}</Text>
 
-        {/* Related */}
         {related.length > 0 && (
           <>
             <Text style={styles.relatedTitle}>Kelas Terkait</Text>
@@ -143,10 +126,6 @@ const styles = StyleSheet.create({
   controls: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
   playBtn: { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 40, padding: 16 },
   playIcon: { fontSize: 28 },
-  seekBar: { position: 'absolute', bottom: 16, left: 16, right: 16 },
-  seekTrack: { height: 3, backgroundColor: colors.mute, borderRadius: 2 },
-  seekFill: { height: 3, backgroundColor: colors.primary, borderRadius: 2 },
-  timeText: { color: colors.canvas, fontFamily: 'Inter_400Regular', fontSize: 11, marginTop: 4 },
   details: { flex: 1, padding: 24 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   durationPill: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.mute },
