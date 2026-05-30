@@ -4,4 +4,5 @@ export const queryKeys = {
   recommended: ['classes', 'recommended'] as const,
   programs: ['programs'] as const,
   recommendedPrograms: ['programs', 'recommended'] as const,
+  programDetail: (id: string) => ['programs', id] as const,
 };

@@ -11,7 +11,7 @@ import { useUserStore } from '../../store/useUserStore';
 import { useProgressStore } from '../../store/useProgressStore';
 import { useSubscriptionStore } from '../../store/useSubscriptionStore';
 import { useClasses } from '../../hooks/useClasses';
-import { usePrograms, useRecommendedPrograms } from '../../hooks/usePrograms';
+import { usePrograms } from '../../hooks/usePrograms';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -22,13 +22,13 @@ function getGreeting() {
 
 export default function HomeScreen() {
   const user = useUserStore((s) => s.user);
-  const { streak, activeProgram, todayCompleted, setActiveProgram } = useProgressStore();
-  const { plan, showPaywall } = useSubscriptionStore();
+  const userComplaints = useUserStore((s) => s.complaints);
+  const { streak, activeProgram, todayCompleted } = useProgressStore();
+  const { plan } = useSubscriptionStore();
   const isPremium = plan !== 'free';
 
   const { data: allClasses } = useClasses();
   const { data: programs } = usePrograms();
-  const { data: recommendedPrograms } = useRecommendedPrograms();
 
   const quickFix = allClasses?.filter((c) => c.category === 'quick_fix') ?? [];
 
@@ -51,13 +51,11 @@ export default function HomeScreen() {
     return pool[activeProgram.currentDay % pool.length] ?? null;
   }, [activeProgram, allClasses, fullProgram]);
 
-  const handleStartProgram = (program: NonNullable<typeof recommendedPrograms>[number]) => {
-    if (program.is_premium && !isPremium) {
-      showPaywall('program_lock');
-      return;
-    }
-    setActiveProgram({ id: program.id, title: program.title, currentDay: 1, totalDays: program.total_days });
-  };
+  const relevantPrograms = useMemo(() => {
+    const all = programs ?? [];
+    if (userComplaints.length === 0) return all;
+    return all.filter((p) => userComplaints.includes(p.complaint));
+  }, [programs, userComplaints]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -73,6 +71,22 @@ export default function HomeScreen() {
           </Text>
           <StreakCounter count={streak} />
         </View>
+
+        {/* Active Session — shown between hero and quick fix if program is active */}
+        {activeProgram !== null && (
+          <View style={styles.section}>
+            <Text style={styles.eyebrow}>PROGRAM AKTIF</Text>
+            <ActiveSessionCard
+              programTitle={activeProgram.title}
+              programIcon={fullProgram?.icon ?? '🧘'}
+              currentDay={activeProgram.currentDay}
+              totalDays={activeProgram.totalDays}
+              todayClass={todayClass}
+              nextClassId={nextClass?.id ?? null}
+              todayCompleted={todayCompleted}
+            />
+          </View>
+        )}
 
         {/* Quick Fix */}
         <View style={styles.section}>
@@ -94,40 +108,23 @@ export default function HomeScreen() {
         {/* Untukmu Hari Ini */}
         <View style={[styles.section, { backgroundColor: colors.canvasSoft }]}>
           <Text style={styles.sectionTitle}>Untukmu Hari Ini</Text>
-          {activeProgram === null ? (
-            <>
-              <Text style={styles.sectionSub}>Pilih program untuk mulai perjalananmu</Text>
-              <View style={styles.vList}>
-                {(recommendedPrograms ?? []).map((program) => (
-                  <ProgramRecommendationCard
-                    key={program.id}
-                    program={program}
-                    onStart={() => handleStartProgram(program)}
-                  />
-                ))}
-              </View>
-              <Button
-                label="Lihat semua program →"
-                variant="tertiary"
-                fullWidth
-                onPress={() => router.push('/(tabs)/programs')}
-                style={{ marginTop: 12 }}
-              />
-            </>
-          ) : (
-            <>
-              <Text style={styles.sectionSub}>Lanjutkan programmu hari ini</Text>
-              <ActiveSessionCard
-                programTitle={activeProgram.title}
-                programIcon={fullProgram?.icon ?? '🧘'}
-                currentDay={activeProgram.currentDay}
-                totalDays={activeProgram.totalDays}
-                todayClass={todayClass}
-                nextClassId={nextClass?.id ?? null}
-                todayCompleted={todayCompleted}
-              />
-            </>
-          )}
+          <Text style={styles.sectionSub}>
+            {activeProgram !== null
+              ? 'Atau jelajahi program lainnya'
+              : 'Pilih program untuk mulai perjalananmu'}
+          </Text>
+          <View style={styles.vList}>
+            {relevantPrograms.map((program) => (
+              <ProgramRecommendationCard key={program.id} program={program} />
+            ))}
+          </View>
+          <Button
+            label="Lihat semua program →"
+            variant="tertiary"
+            fullWidth
+            onPress={() => router.push('/(tabs)/programs')}
+            style={{ marginTop: 12 }}
+          />
         </View>
 
         <View style={{ height: 24 }} />

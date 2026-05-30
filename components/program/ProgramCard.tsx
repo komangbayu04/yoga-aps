@@ -1,12 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
 import { colors } from '../../theme/colors';
 import { radius } from '../../theme/radius';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { ProgressBar } from '../ui/ProgressBar';
-import { useSubscriptionStore } from '../../store/useSubscriptionStore';
-import { useProgressStore } from '../../store/useProgressStore';
 
 interface ProgramCardProps {
   program: {
@@ -24,21 +23,7 @@ interface ProgramCardProps {
 }
 
 export function ProgramCard({ program }: ProgramCardProps) {
-  const showPaywall = useSubscriptionStore((s) => s.showPaywall);
-  const setActiveProgram = useProgressStore((s) => s.setActiveProgram);
-
-  const handleStart = () => {
-    if (program.status === 'locked') {
-      showPaywall('program_lock');
-      return;
-    }
-    setActiveProgram({
-      id: program.id,
-      title: program.title,
-      currentDay: 1,
-      totalDays: program.total_days,
-    });
-  };
+  const handlePress = () => router.push(`/program/${program.id}`);
 
   return (
     <View style={styles.card}>
@@ -66,19 +51,28 @@ export function ProgramCard({ program }: ProgramCardProps) {
         {program.status === 'completed' && <Badge label="✓ Selesai" variant="pale" />}
         {program.status === 'not_started' && (
           <Button
-            label="Mulai Program"
+            label="Lihat Program"
             variant="tertiary"
             size="small"
-            onPress={handleStart}
+            onPress={handlePress}
             style={{ marginTop: 8 }}
           />
         )}
         {program.status === 'locked' && (
           <Button
-            label="🔒 Premium"
+            label="🔒 Lihat Program"
             variant="secondary"
             size="small"
-            onPress={handleStart}
+            onPress={handlePress}
+            style={{ marginTop: 8 }}
+          />
+        )}
+        {program.status === 'active' && (
+          <Button
+            label="Lanjutkan"
+            variant="primary"
+            size="small"
+            onPress={handlePress}
             style={{ marginTop: 8 }}
           />
         )}

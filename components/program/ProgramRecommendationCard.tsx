@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { colors } from '../../theme/colors';
@@ -17,10 +18,9 @@ interface Program {
 
 interface Props {
   program: Program;
-  onStart: () => void;
 }
 
-export function ProgramRecommendationCard({ program, onStart }: Props) {
+export function ProgramRecommendationCard({ program }: Props) {
   return (
     <Card padding={20}>
       <View style={styles.row}>
@@ -33,9 +33,15 @@ export function ProgramRecommendationCard({ program, onStart }: Props) {
             <Text style={styles.tag}>{program.complaint}</Text>
           </View>
           <Text style={styles.meta}>{program.total_days} hari · {program.minutes_per_day} mnt/hari</Text>
-          <Text style={styles.caption}>0 dari {program.total_days} hari</Text>
+          {program.is_premium && <Text style={styles.premiumBadge}>🔒 Premium</Text>}
         </View>
-        <Button label="Mulai →" variant="primary" size="small" onPress={onStart} style={styles.btn} />
+        <Button
+          label="Lihat →"
+          variant="primary"
+          size="small"
+          onPress={() => router.push(`/program/${program.id}`)}
+          style={styles.btn}
+        />
       </View>
     </Card>
   );
@@ -67,6 +73,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   meta: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.mute, marginTop: 2 },
-  caption: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.mute, marginTop: 2 },
+  premiumBadge: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.mute, marginTop: 2 },
   btn: { flexShrink: 0 },
 });

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getPrograms, getRecommendedPrograms } from '../lib/api';
+import { getPrograms, getRecommendedPrograms, getProgramDetail } from '../lib/api';
 import { queryKeys } from '../constants/queryKeys';
 
 export function usePrograms() {
@@ -8,4 +8,8 @@ export function usePrograms() {
 
 export function useRecommendedPrograms() {
   return useQuery({ queryKey: queryKeys.recommendedPrograms, queryFn: getRecommendedPrograms });
+}
+
+export function useProgramDetail(id: string) {
+  return useQuery({ queryKey: queryKeys.programDetail(id), queryFn: () => getProgramDetail(id), enabled: !!id });
 }

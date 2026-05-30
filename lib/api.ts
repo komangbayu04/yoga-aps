@@ -176,9 +176,56 @@ export const mockPrograms = [
   },
 ];
 
+export const mockProgramDays: Record<string, { day: number; classId: string; title: string; duration_min: number }[]> = {
+  prog_1: [
+    { day: 1, classId: '2', title: 'Relaksasi Punggung Bawah', duration_min: 10 },
+    { day: 2, classId: '5', title: 'Full Body Morning Flow', duration_min: 25 },
+    { day: 3, classId: '2', title: 'Relaksasi Punggung Bawah', duration_min: 10 },
+    { day: 4, classId: '8', title: 'Weekend Deep Stretch', duration_min: 30 },
+    { day: 5, classId: '2', title: 'Relaksasi Punggung Bawah', duration_min: 10 },
+    { day: 6, classId: '5', title: 'Full Body Morning Flow', duration_min: 25 },
+    { day: 7, classId: '8', title: 'Weekend Deep Stretch', duration_min: 30 },
+  ],
+  prog_2: [
+    { day: 1, classId: '1', title: 'Regangkan Leher & Bahu', duration_min: 7 },
+    { day: 2, classId: '5', title: 'Full Body Morning Flow', duration_min: 25 },
+    { day: 3, classId: '1', title: 'Regangkan Leher & Bahu', duration_min: 7 },
+    { day: 4, classId: '8', title: 'Weekend Deep Stretch', duration_min: 30 },
+    { day: 5, classId: '1', title: 'Regangkan Leher & Bahu', duration_min: 7 },
+  ],
+  prog_3: [
+    { day: 1, classId: '3', title: 'Meditasi Singkat untuk Stres', duration_min: 5 },
+    { day: 2, classId: '6', title: 'Evening Wind Down', duration_min: 15 },
+    { day: 3, classId: '3', title: 'Meditasi Singkat untuk Stres', duration_min: 5 },
+    { day: 4, classId: '6', title: 'Evening Wind Down', duration_min: 15 },
+    { day: 5, classId: '3', title: 'Meditasi Singkat untuk Stres', duration_min: 5 },
+    { day: 6, classId: '6', title: 'Evening Wind Down', duration_min: 15 },
+    { day: 7, classId: '3', title: 'Meditasi Singkat untuk Stres', duration_min: 5 },
+  ],
+  prog_4: [
+    { day: 1, classId: '4', title: 'Yoga Mata Lelah', duration_min: 7 },
+    { day: 2, classId: '4', title: 'Yoga Mata Lelah', duration_min: 7 },
+    { day: 3, classId: '4', title: 'Yoga Mata Lelah', duration_min: 7 },
+    { day: 4, classId: '4', title: 'Yoga Mata Lelah', duration_min: 7 },
+    { day: 5, classId: '4', title: 'Yoga Mata Lelah', duration_min: 7 },
+  ],
+  prog_5: [
+    { day: 1, classId: '7', title: 'Peregangan Pergelangan Tangan', duration_min: 5 },
+    { day: 2, classId: '7', title: 'Peregangan Pergelangan Tangan', duration_min: 5 },
+    { day: 3, classId: '7', title: 'Peregangan Pergelangan Tangan', duration_min: 5 },
+    { day: 4, classId: '7', title: 'Peregangan Pergelangan Tangan', duration_min: 5 },
+    { day: 5, classId: '7', title: 'Peregangan Pergelangan Tangan', duration_min: 5 },
+  ],
+};
+
 export const getClasses = async () => mockClasses;
 export const getPrograms = async () => mockPrograms;
 export const getRecommendedPrograms = async () =>
   mockPrograms.filter((p) => p.status === 'not_started').slice(0, 2);
 export const getClassById = async (id: string) => mockClasses.find((c) => c.id === id) ?? null;
 export const getRecommendedClasses = async () => mockClasses.slice(0, 3);
+export const getProgramDetail = async (id: string) => {
+  const program = mockPrograms.find((p) => p.id === id) ?? null;
+  if (!program) return null;
+  return { ...program, days: mockProgramDays[id] ?? [] };
+};
