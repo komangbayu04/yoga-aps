@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ScrollView, View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, SafeAreaView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { colors } from '../../theme/colors';
 import { StreakCounter } from '../../components/ui/StreakCounter';
@@ -125,6 +125,26 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/programs')}
             style={{ marginTop: 12 }}
           />
+
+          {/* 3 program baru di bawah tombol */}
+          <View style={styles.bottomCards}>
+            {(programs ?? []).slice(0, 3).map((program) => (
+              <Pressable
+                key={program.id}
+                style={styles.bottomCard}
+                onPress={() => router.push(`/program/${program.id}`)}
+              >
+                <View style={styles.bottomCardIcon}>
+                  <Text style={styles.bottomCardIconText}>{program.icon}</Text>
+                </View>
+                <View style={styles.bottomCardInfo}>
+                  <Text style={styles.bottomCardTitle} numberOfLines={1}>{program.title}</Text>
+                  <Text style={styles.bottomCardMeta}>{program.total_days} hari · {program.minutes_per_day} mnt/hari</Text>
+                </View>
+                <Text style={styles.bottomCardArrow}>›</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         <View style={{ height: 24 }} />
@@ -169,4 +189,27 @@ const styles = StyleSheet.create({
   hScroll: { paddingRight: 24, gap: 12 },
   hCard: { width: 160 },
   vList: { gap: 12 },
+  bottomCards: { marginTop: 20, gap: 8 },
+  bottomCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.canvas,
+    borderRadius: 16,
+    padding: 14,
+  },
+  bottomCardIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.primaryPale,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  bottomCardIconText: { fontSize: 22 },
+  bottomCardInfo: { flex: 1 },
+  bottomCardTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 14, color: colors.ink },
+  bottomCardMeta: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mute, marginTop: 2 },
+  bottomCardArrow: { fontFamily: 'Inter_400Regular', fontSize: 22, color: colors.mute, lineHeight: 26 },
 });

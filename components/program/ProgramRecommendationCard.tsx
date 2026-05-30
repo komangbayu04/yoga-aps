@@ -22,7 +22,7 @@ interface Props {
 
 export function ProgramRecommendationCard({ program }: Props) {
   return (
-    <Card padding={20}>
+    <Card variant="green" padding={20}>
       <View style={styles.row}>
         <View style={styles.iconSquare}>
           <Text style={styles.iconText}>{program.icon}</Text>
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
     color: colors.positiveDeep,
-    backgroundColor: colors.primaryPale,
+    backgroundColor: colors.canvas,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: radius.pill,
