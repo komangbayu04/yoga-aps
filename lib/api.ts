@@ -178,5 +178,7 @@ export const mockPrograms = [
 
 export const getClasses = async () => mockClasses;
 export const getPrograms = async () => mockPrograms;
+export const getRecommendedPrograms = async () =>
+  mockPrograms.filter((p) => p.status === 'not_started').slice(0, 2);
 export const getClassById = async (id: string) => mockClasses.find((c) => c.id === id) ?? null;
 export const getRecommendedClasses = async () => mockClasses.slice(0, 3);

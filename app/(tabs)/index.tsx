@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
 import { colors } from '../../theme/colors';
 import { StreakCounter } from '../../components/ui/StreakCounter';
-import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Button } from '../../components/ui/Button';
 import { ClassCard } from '../../components/class/ClassCard';
+import { ProgramRecommendationCard } from '../../components/program/ProgramRecommendationCard';
+import { ActiveSessionCard } from '../../components/program/ActiveSessionCard';
 import { useUserStore } from '../../store/useUserStore';
 import { useProgressStore } from '../../store/useProgressStore';
-import { useClasses, useRecommendedClasses } from '../../hooks/useClasses';
+import { useSubscriptionStore } from '../../store/useSubscriptionStore';
+import { useClasses } from '../../hooks/useClasses';
+import { usePrograms, useRecommendedPrograms } from '../../hooks/usePrograms';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -19,15 +22,47 @@ function getGreeting() {
 
 export default function HomeScreen() {
   const user = useUserStore((s) => s.user);
-  const { streak, activeProgram } = useProgressStore();
+  const { streak, activeProgram, todayCompleted, setActiveProgram } = useProgressStore();
+  const { plan, showPaywall } = useSubscriptionStore();
+  const isPremium = plan !== 'free';
+
   const { data: allClasses } = useClasses();
-  const { data: recommended } = useRecommendedClasses();
+  const { data: programs } = usePrograms();
+  const { data: recommendedPrograms } = useRecommendedPrograms();
 
   const quickFix = allClasses?.filter((c) => c.category === 'quick_fix') ?? [];
+
+  const fullProgram = useMemo(
+    () => programs?.find((p) => p.id === activeProgram?.id) ?? null,
+    [programs, activeProgram?.id]
+  );
+
+  const todayClass = useMemo(() => {
+    if (!activeProgram || !allClasses || !fullProgram) return null;
+    const matching = allClasses.filter((c) => c.complaints.includes(fullProgram.complaint));
+    const pool = matching.length > 0 ? matching : allClasses;
+    return pool[(activeProgram.currentDay - 1) % pool.length] ?? null;
+  }, [activeProgram, allClasses, fullProgram]);
+
+  const nextClass = useMemo(() => {
+    if (!activeProgram || !allClasses || !fullProgram) return null;
+    const matching = allClasses.filter((c) => c.complaints.includes(fullProgram.complaint));
+    const pool = matching.length > 0 ? matching : allClasses;
+    return pool[activeProgram.currentDay % pool.length] ?? null;
+  }, [activeProgram, allClasses, fullProgram]);
+
+  const handleStartProgram = (program: NonNullable<typeof recommendedPrograms>[number]) => {
+    if (program.is_premium && !isPremium) {
+      showPaywall('program_lock');
+      return;
+    }
+    setActiveProgram({ id: program.id, title: program.title, currentDay: 1, totalDays: program.total_days });
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+
         {/* Hero Band */}
         <View style={styles.heroBand}>
           <Text style={styles.greeting}>
@@ -56,35 +91,44 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
-        {/* Recommended */}
+        {/* Untukmu Hari Ini */}
         <View style={[styles.section, { backgroundColor: colors.canvasSoft }]}>
           <Text style={styles.sectionTitle}>Untukmu Hari Ini</Text>
-          <View style={styles.vList}>
-            {(recommended ?? []).map((cls) => (
-              <ClassCard key={cls.id} item={cls} />
-            ))}
-          </View>
+          {activeProgram === null ? (
+            <>
+              <Text style={styles.sectionSub}>Pilih program untuk mulai perjalananmu</Text>
+              <View style={styles.vList}>
+                {(recommendedPrograms ?? []).map((program) => (
+                  <ProgramRecommendationCard
+                    key={program.id}
+                    program={program}
+                    onStart={() => handleStartProgram(program)}
+                  />
+                ))}
+              </View>
+              <Button
+                label="Lihat semua program →"
+                variant="tertiary"
+                fullWidth
+                onPress={() => router.push('/(tabs)/programs')}
+                style={{ marginTop: 12 }}
+              />
+            </>
+          ) : (
+            <>
+              <Text style={styles.sectionSub}>Lanjutkan programmu hari ini</Text>
+              <ActiveSessionCard
+                programTitle={activeProgram.title}
+                programIcon={fullProgram?.icon ?? '🧘'}
+                currentDay={activeProgram.currentDay}
+                totalDays={activeProgram.totalDays}
+                todayClass={todayClass}
+                nextClassId={nextClass?.id ?? null}
+                todayCompleted={todayCompleted}
+              />
+            </>
+          )}
         </View>
-
-        {/* Active Program Banner */}
-        {activeProgram && (
-          <View style={styles.programBanner}>
-            <Text style={styles.programTitle}>{activeProgram.title}</Text>
-            <Text style={styles.programDay}>
-              Hari {activeProgram.currentDay} dari {activeProgram.totalDays}
-            </Text>
-            <ProgressBar
-              progress={activeProgram.currentDay / activeProgram.totalDays}
-              style={{ marginVertical: 12 }}
-            />
-            <Button
-              label="Lanjutkan"
-              variant="primary"
-              size="small"
-              onPress={() => router.push('/(tabs)/programs')}
-            />
-          </View>
-        )}
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -102,16 +146,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     gap: 8,
   },
-  greeting: {
-    fontFamily: 'Manrope_900ExtraBold',
-    fontSize: 24,
-    color: colors.ink,
-  },
-  heroParagraph: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 14,
-    color: colors.body,
-  },
+  greeting: { fontFamily: 'Manrope_900ExtraBold', fontSize: 24, color: colors.ink },
+  heroParagraph: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.body },
   section: { backgroundColor: colors.canvas, padding: 24 },
   eyebrow: {
     fontFamily: 'Inter_600SemiBold',
@@ -125,26 +161,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_900ExtraBold',
     fontSize: 20,
     color: colors.ink,
+    marginBottom: 4,
+  },
+  sectionSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: colors.mute,
     marginBottom: 16,
   },
   hScroll: { paddingRight: 24, gap: 12 },
   hCard: { width: 160 },
   vList: { gap: 12 },
-  programBanner: {
-    backgroundColor: colors.ink,
-    margin: 24,
-    borderRadius: 24,
-    padding: 24,
-  },
-  programTitle: {
-    fontFamily: 'Manrope_900ExtraBold',
-    fontSize: 20,
-    color: colors.primary,
-  },
-  programDay: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 13,
-    color: colors.canvas,
-    marginTop: 4,
-  },
 });
